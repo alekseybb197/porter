@@ -30,14 +30,16 @@ type DockerfileGenerator struct {
 	*manifest.Manifest
 	*templates.Templates
 	Mixins pkgmgmt.PackageManager
+	*BuildDefinitionOptions
 }
 
-func NewDockerfileGenerator(config *config.Config, m *manifest.Manifest, tmpl *templates.Templates, mp pkgmgmt.PackageManager) *DockerfileGenerator {
+func NewDockerfileGenerator(config *config.Config, m *manifest.Manifest, tmpl *templates.Templates, mp pkgmgmt.PackageManager, opts *BuildDefinitionOptions) *DockerfileGenerator {
 	return &DockerfileGenerator{
-		Config:    config,
-		Manifest:  m,
-		Templates: tmpl,
-		Mixins:    mp,
+		Config:                 config,
+		Manifest:               m,
+		Templates:              tmpl,
+		Mixins:                 mp,
+		BuildDefinitionOptions: opts,
 	}
 }
 
@@ -72,10 +74,12 @@ func (g *DockerfileGenerator) buildDockerfile(ctx context.Context) ([]string, er
 		return nil, err
 	}
 
-	lines = append(lines, g.buildPorterSection()...)
-	lines = append(lines, g.buildCNABSection()...)
-	lines = append(lines, g.buildWORKDIRSection())
-	lines = append(lines, g.buildCMDSection())
+	if !g.UseCustomDockerfile {
+		lines = append(lines, g.buildPorterSection()...)
+		lines = append(lines, g.buildCNABSection()...)
+		lines = append(lines, g.buildWORKDIRSection())
+		lines = append(lines, g.buildCMDSection())
+	}
 
 	return lines, nil
 }
@@ -100,6 +104,10 @@ func (g *DockerfileGenerator) getBaseDockerfile(ctx context.Context) ([]string, 
 		defer file.Close()
 		reader = file
 	} else {
+		if g.UseCustomDockerfile {
+			return nil, fmt.Errorf("the Dockerfile must be specified in the manifest")
+		}
+
 		contents, err := g.Templates.GetDockerfile()
 		if err != nil {
 			return nil, fmt.Errorf("error loading default Dockerfile template: %w", err)
@@ -117,13 +125,16 @@ func (g *DockerfileGenerator) getBaseDockerfile(ctx context.Context) ([]string, 
 		lines = append(lines, line)
 	}
 
-	// If their template doesn't declare a syntax, use the default
-	if !syntaxFound {
-		log.Warnf("No syntax was declared in the template Dockerfile, using %s", DefaultDockerfileSyntax)
-		lines = append([]string{fmt.Sprintf("# syntax=%s", DefaultDockerfileSyntax)}, lines...)
+	if !g.UseCustomDockerfile {
+		// If their template doesn't declare a syntax, use the default
+		if !syntaxFound {
+			log.Warnf("No syntax was declared in the template Dockerfile, using %s", DefaultDockerfileSyntax)
+			lines = append([]string{fmt.Sprintf("# syntax=%s", DefaultDockerfileSyntax)}, lines...)
+		}
+		return g.replaceTokens(ctx, lines)
 	}
 
-	return g.replaceTokens(ctx, lines)
+	return lines, nil
 }
 
 func (g *DockerfileGenerator) buildPorterSection() []string {
