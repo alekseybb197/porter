@@ -79,6 +79,7 @@ COPY mybin /cnab/app/
 	t.Run("build from custom docker with PORTER_INIT supplied", func(t *testing.T) {
 		t.Parallel()
 
+		opts := BuildDefinitionOptions{UseCustomDockerfile: false}
 		c := config.NewTestConfig(t)
 		tmpl := templates.NewTemplates(c.Config)
 		configTpl, err := tmpl.GetManifest()
