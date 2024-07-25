@@ -54,7 +54,7 @@ func (s *Store) Connect(ctx context.Context) error {
 	container := "porter-mongodb-docker-plugin"
 	dataVol := container + "-data"
 
-	conn, err := EnsureMongoIsRunning(ctx, s.context, container, s.config.Port, dataVol, s.config.Database, s.config.Timeout)
+	conn, err := EnsureMongoIsRunning(ctx, s.context, container, s.config.Image, s.config.Port, dataVol, s.config.Database, s.config.Timeout)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (s *Store) Update(ctx context.Context, opts plugins.UpdateOptions) error {
 	return s.Store.Update(ctx, opts)
 }
 
-func EnsureMongoIsRunning(ctx context.Context, c *portercontext.Context, container string, port string, dataVol string, dbName string, timeoutSeconds int) (*mongodb.Store, error) {
+func EnsureMongoIsRunning(ctx context.Context, c *portercontext.Context, container string, image string, port string, dataVol string, dbName string, timeoutSeconds int) (*mongodb.Store, error) {
 	ctx, span := tracing.StartSpan(ctx)
 	defer span.EndSpan()
 
@@ -164,7 +164,8 @@ func EnsureMongoIsRunning(ctx context.Context, c *portercontext.Context, contain
 
 	// TODO(carolynvs): run this using the docker library
 	startMongo := func() error {
-		mongoImg := "mongo:4.0-xenial"
+		//ab mongoImg := "mongo:4.0-xenial"
+		mongoImg := image
 		span.Debugf("pulling %s", mongoImg)
 
 		err := exec.Command("docker", "pull", mongoImg).Run()

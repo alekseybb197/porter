@@ -88,6 +88,7 @@ func (t Tester) startMongo(ctx context.Context) error {
 	conn, err := mongodb_docker.EnsureMongoIsRunning(ctx,
 		t.TestContext.Context,
 		"porter-smoke-test-mongodb-plugin",
+		"mongo:4.0-xenial",
 		"27017",
 		"",
 		t.dbName,
