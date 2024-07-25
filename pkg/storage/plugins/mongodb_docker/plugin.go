@@ -13,10 +13,13 @@ import (
 // PluginKey is the identifier of the internal mongodb run in docker plugin.
 const PluginKey = plugins.PluginInterface + ".porter.mongodb-docker"
 
+const MongoImage = "mongo:4.0-xenial"
+
 // PluginConfig supported by the mongodb-docker plugin as defined in porter.yaml
 type PluginConfig struct {
 	Port     string `mapstructure:"port,omitempty"`
 	Database string `mapstructure:"database,omitempty"`
+	Image    string `mapstructure:"image,omitempty"`
 
 	// Timeout in seconds
 	Timeout int `mapstructure:"timeout,omitempty"`
@@ -27,6 +30,7 @@ func NewPlugin(c *portercontext.Context, rawCfg interface{}) (plugin.Plugin, err
 	cfg := PluginConfig{
 		Port:     "27018",
 		Database: "porter",
+		Image:    MongoImage,
 		Timeout:  10,
 	}
 	if err := mapstructure.Decode(rawCfg, &cfg); err != nil {

@@ -70,7 +70,7 @@ func (s *TestStoragePlugin) useDevDatabase(ctx context.Context) error {
 }
 
 func (s *TestStoragePlugin) runTestDatabase(ctx context.Context) error {
-	testMongo, err := mongodb_docker.EnsureMongoIsRunning(ctx, s.tc.Context, "porter-test-mongodb-plugin", "27017", "", s.database, 10)
+	testMongo, err := mongodb_docker.EnsureMongoIsRunning(ctx, s.tc.Context, "porter-test-mongodb-plugin", "mongo:4.0-xenial", "27017", "", s.database, 10)
 	if err != nil {
 		return err
 	}
